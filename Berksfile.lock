@@ -1,0 +1,19 @@
+{
+  "sources": {
+    "mongodb": {
+      "path": "."
+    },
+    "apt": {
+      "locked_version": "2.1.1"
+    },
+    "iptables": {
+      "locked_version": "0.12.0"
+    },
+    "build-essential": {
+      "locked_version": "1.4.2"
+    },
+    "ulimit": {
+      "locked_version": "0.3.0"
+    }
+  }
+}
