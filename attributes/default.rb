@@ -52,16 +52,16 @@ default['mongodb']['defaults']['opts']['configsvr'] = false
 
 
 
-# configs
+# configs options
 default['mongodb']['defaults']['config']['port'] = 27019
 default['mongodb']['defaults']['config']['configsvr'] = true
 
 
-## for routers
+## for routers options
 default['mongodb']['defaults']['router']['port'] = 27018
 default['mongodb']['defaults']['router']['configdb'] = ""
 
-# for shards
+# for shards options
 default['mongodb']['defaults']['shard']['arbiter'] = false
 default['mongodb']['defaults']['shard']['shardsvr'] = true
 

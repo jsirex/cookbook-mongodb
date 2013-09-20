@@ -1,6 +1,8 @@
 node.override['build_essential']['compiletime'] = true
 include_recipe "build-essential"
 
+include_recipe "mongodb::_search"
+
 chef_gem 'bson_ext'
 chef_gem 'mongo'
 
@@ -8,11 +10,7 @@ cluster_name = node['mongodb']['cluster_name']
 
 Chef::Log.info("[cluster_builder] Found cluster: #{cluster_name}")
 
-query = []
-query << "chef_environment:#{node.chef_environment}"
-query << "mongodb_cluster_name:#{cluster_name}"
-query << "recipes:mongodb\\:\\:shard"
-shard_nodes = search(:node, query.join(' AND '))
+shard_nodes = search(:node, node['mongodb']['search']['shards'])
 
 shards = Hash.new
 shard_nodes.each do |s_node|
@@ -51,11 +49,7 @@ shards.each_pair do |shard_name, servers|
 end
 
 # Updating Shards
-query = []
-query << "chef_environment:#{node.chef_environment}"
-query << "mongodb_cluster_name:#{cluster_name}"
-query << "recipes:mongodb\\:\\:router"
-router_nodes = search(:node, query.join(' AND '))
+router_nodes = search(:node, node['mongodb']['search']['routers'])
 routers = []
 router_nodes.each do |r_node|
   MongoDB.each_router(r_node) do |router_name, conf|

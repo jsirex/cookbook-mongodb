@@ -1,4 +1,5 @@
 include_recipe "mongodb::default"
+include_recipe "mongodb::_search"
 defaults = node['mongodb']['defaults']
 # configure routers attrs
 MongoDB.each_router(node) do |service_name, conf|
@@ -25,11 +26,7 @@ end
 
 
 cluster_name = node['mongodb']['cluster_name']
-query = []
-query << "chef_environment:#{node.chef_environment}"
-query << "mongodb_cluster_name:#{cluster_name}"
-query << "recipes:mongodb\\:\\:config"
-config_nodes = search(:node, query.join(" AND "))
+config_nodes = search(:node, node['mongodb']['search']['configs'])
 
 config_servers = []
 config_nodes.each do |c_node|

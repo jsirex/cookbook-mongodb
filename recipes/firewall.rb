@@ -1,15 +1,11 @@
 require 'socket'
 
 include_recipe "iptables"
+include_recipe "mongodb::_search"
 
 cluster_name = node['mongodb']['cluster_name']
 # Get list of other clusted nodes:
-query = []
-query << "chef_environment:#{node.chef_environment}"
-query << "mongodb_cluster_name:#{cluster_name}"
-query << "recipe:mongodb"
-query << "NOT fqdn:#{node['fqdn']}"
-remote_nodes = search(:node, query.join(" AND "))
+remote_nodes = search(:node, node['mongodb']['search']['all'])
 
 
 services_list = {}
