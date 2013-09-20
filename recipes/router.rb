@@ -1,3 +1,29 @@
+include_recipe "mongodb::default"
+defaults = node['mongodb']['defaults']
+# configure routers attrs
+MongoDB.each_router(node) do |service_name, conf|
+  new_opts = DeepMerge.merge(defaults['opts'], defaults['router'])
+  node.default['mongodb']['routers'][service_name] = defaults['service']  
+  node.default['mongodb']['routers'][service_name]['opts'] = new_opts
+
+  node.default['mongodb']['routers'][service_name]['install_path'] =
+    ::File.join(node['mongodb']['routers'][service_name]['install_prefix'], service_name)
+  
+  node.default['mongodb']['routers'][service_name]['opts']['dbpath'] =
+    ::File.join(node['mongodb']['routers'][service_name]['install_path'], 
+                node['mongodb']['routers'][service_name]['db_dir'])
+  node.default['mongodb']['routers'][service_name]['opts']['logpath'] =
+    ::File.join(node['mongodb']['routers'][service_name]['install_path'], 
+                node['mongodb']['routers'][service_name]['log_dir'], service_name + '.log')
+  node.default['mongodb']['routers'][service_name]['opts']['pidfilepath'] = 
+    ::File.join('/var/run/', service_name + '.pid')
+
+
+  # Internal flags
+  node.override['mongodb']['routers'][service_name]['ready_to_install'] = true
+end
+
+
 cluster_name = node['mongodb']['cluster_name']
 query = []
 query << "chef_environment:#{node.chef_environment}"

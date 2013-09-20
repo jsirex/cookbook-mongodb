@@ -1,243 +1,87 @@
-require 'socket'
-
-# Launch and provision two servers to build an elastic search cluster under debian
-puts "[Vagrant] #{Vagrant::VERSION}"
-puts "[Vagrant] MongoDB cookbook is used!"
-
-# Including global config
-node_sh1 = {
-  'mongodb' => {
-    'version' => '2.4.5',
-    'cluster_name' => 'e3s',
-    'shards' => {
-      'sh1' => {
-        'mongodb_1' => {
-          'install_prefix' => '/data', # for test
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 30017
-          }
-        },
-        'mongodb_2' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 33017
-          }
-        },
-        'mongodb_3' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 39017
-          }
-        }
-      }
-    },
-    'routers' => {
-      'mongos' => {
-        'opts' => {
-          'port' => 36017
-        }
-      }
-    }
-  }
-}
-
-node_sh2 = {
-  'mongodb' => {
-    'version' => '2.4.5',
-    'cluster_name' => 'e3s',
-    'shards' => {
-      'sh2' => {
-        'mongodb_1' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 30017
-          }
-        },
-        'mongodb_2' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 33017
-          }
-        }
-      }
-    },
-    'routers' => {
-      'mongos' => {
-        'opts' => {
-          'port' => 36017
-        }
-      }
-    }
-  }
-}
-node_sh3 = {
-  'mongodb' => {
-    'version' => '2.4.5',
-    'cluster_name' => 'e3s',
-    'shards' => {
-      'sh3' => {
-        'mongodb_1' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 30017
-          }
-        },
-        'mongodb_2' => {
-          'opts' => {
-            'smallfiles' => true,
-            'oplogSize' => 512,
-            'port' => 33017
-          }
-        }
-      }
-    },
-    'routers' => {
-      'mongos' => {
-        'opts' => {
-          'port' => 36017
-        }
-      }
-    }
-  }
-}
-
-node_cfg1 = {
-  'mongodb' => {
-    'version' => '2.4.5',
-    'cluster_name' => 'e3s',
-    'configs' => {
-      'mongodb_config_1' => {
-        'opts' => {
-          'port' => 27019,
-          'smallfiles' => true,
-          'oplogSize' => 512
-        }
-      },
-      'mongodb_config_2' => {
-        'opts' => {
-          'port' => 30019,
-          'smallfiles' => true,
-          'oplogSize' => 512
-        }
-      },
-      'mongodb_config_3' => {
-        'opts' => {
-          'port' => 33019,
-          'smallfiles' => true,
-          'oplogSize' => 512
-        }
-      }
-    },
-    'routers' => {
-      'mongos' => {
-        'opts' => {
-          'port' => 36017
-        }
-      },
-      'mongos2' => {
-        'opts' => {
-          'port' => 27017
-        }
-      }
-    }
-  }
-}
-
 Vagrant.configure("2") do |config|
+# All Vagrant configuration is done here. The most common configuration
+# options are documented and commented below. For a complete reference,
+# please see the online documentation at vagrantup.com.
+
+  config.vm.hostname = "e3s-mongodb-berkshelf"
+
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = "wheezy64"
+
+  # The url from where the 'config.vm.box' box will be fetched if it
+  # doesn't already exist on the user's system.
+  config.vm.box_url = "https://evbyminsd5915.minsk.epam.com/boxes/wheezy64.box"
+
+  # Assign this VM to a host-only network IP, allowing you to access it
+  # via the IP. Host-only networks can talk to the host machine as well as
+  # any other machines on the same network, but cannot be accessed (through this
+  # network interface) by any external networks.
+  #config.vm.network :private_network, ip: "33.33.33.10"
+
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+
+  # config.vm.network :public_network
+
+  # Create a forwarded port mapping which allows access to a specific port
+  # within the machine from a port on the host machine. In the example below,
+  # accessing "localhost:8080" will access port 80 on the guest machine.
+
+  # Share an additional folder to the guest VM. The first argument is
+  # the path on the host to the actual folder. The second argument is
+  # the path on the guest to mount the folder. And the optional third
+  # argument is a set of non-required options.
+  # config.vm.synced_folder "../data", "/vagrant_data"
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Example for VirtualBox:
+  #
+  # config.vm.provider :virtualbox do |vb|
+  #   # Don't boot with headless mode
+  #   vb.gui = true
+  #
+  #   # Use VBoxManage to customize the VM. For example to change memory:
+  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
+  # end
+  #
+  # View the documentation for the provider you're using for more
+  # information on available options.
+
+  config.ssh.max_tries = 40
+  config.ssh.timeout   = 120
+
+  # The path to the Berksfile to use with Vagrant Berkshelf
+  # config.berkshelf.berksfile_path = "./Berksfile"
+
+  # Enabling the Berkshelf plugin. To enable this globally, add this configuration
+  # option to your ~/.vagrant.d/Vagrantfile file
+  config.berkshelf.enabled = true
+
+  # An array of symbols representing groups of cookbook described in the Vagrantfile
+  # to exclusively install and copy to Vagrant's shelf.
+  # config.berkshelf.only = []
+
+  # An array of symbols representing groups of cookbook described in the Vagrantfile
+  # to skip installing and copying to Vagrant's shelf.
+  # config.berkshelf.except = []
 
   config.vm.provision :shell, :inline => %Q{
-    echo "Hacking MongoDB Package installation."
-    test -e /var/cache/apt/archives/mongodb-10gen_2.4.5_amd64.deb ||
-    sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archives "https://evbyminsd5915.minsk.epam.com/mongodb/mongodb-10gen_2.4.5_amd64.deb" 
-  }
+echo "Hacking MongoDB Package installation."
+test -e /var/cache/apt/archives/mongodb-10gen_2.4.5_amd64.deb ||
+sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archives "https://evbyminsd5915.minsk.epam.com/mongodb/mongodb-10gen_2.4.5_amd64.deb"
+}
 
-  config.vm.define :sh1 do |sh1|
-    sh1.vm.hostname = Socket.gethostname + "SH1"
+  config.vm.provision :chef_solo do |chef|
+    chef.json = {
 
-    sh1.vm.provision :chef_client do |chef|
-      chef.chef_server_url = "https://evbyminsd5915.minsk.epam.com"
+    }
 
-      chef.validation_client_name = "vagrant"
-      chef.validation_key_path = File.dirname(File.expand_path(__FILE__)) + '/../../.chef/vagrant-validation.pem'
-
-
-      chef.add_recipe 'iptables'
-      chef.add_recipe 'iptables::ssh'
-      chef.add_recipe 'mongodb::limits'
-      chef.add_recipe 'mongodb::firewall'
-      chef.add_recipe 'mongodb'
-      chef.add_recipe 'mongodb::shard'
-      chef.add_recipe 'mongodb::router'
-      chef.json = node_sh1
-
-    end
-  end
-
-  config.vm.define :sh2 do |sh2|
-    sh2.vm.hostname = Socket.gethostname + "SH2"
-
-    sh2.vm.provision :chef_client do |chef|
-      chef.chef_server_url = "https://evbyminsd5915.minsk.epam.com"
-
-      chef.validation_client_name = "vagrant"
-      chef.validation_key_path = File.dirname(File.expand_path(__FILE__)) + '/../../.chef/vagrant-validation.pem'
-
-      chef.add_recipe 'iptables'
-      chef.add_recipe 'iptables::ssh'
-      chef.add_recipe 'mongodb::firewall'
-      chef.add_recipe 'mongodb'
-      chef.add_recipe 'mongodb::shard'
-      chef.add_recipe 'mongodb::router'
-      chef.json = node_sh2
-
-    end
-  end
-
-  config.vm.define :sh3 do |sh3|
-    sh3.vm.hostname = Socket.gethostname + "SH3"
-
-    sh3.vm.provision :chef_client do |chef|
-      chef.chef_server_url = "https://evbyminsd5915.minsk.epam.com"
-
-      chef.validation_client_name = "vagrant"
-      chef.validation_key_path = File.dirname(File.expand_path(__FILE__)) + '/../../.chef/vagrant-validation.pem'
-
-      chef.add_recipe 'iptables'
-      chef.add_recipe 'iptables::ssh'
-      chef.add_recipe 'mongodb::firewall'
-      chef.add_recipe 'mongodb'
-      chef.add_recipe 'mongodb::shard'
-      chef.add_recipe 'mongodb::router'
-      chef.json = node_sh3
-
-    end
-  end
-
-  config.vm.define :cfg1 do |cfg1|
-    cfg1.vm.hostname = Socket.gethostname + "CFG1"
-
-    cfg1.vm.provision :chef_client do |chef|
-      chef.chef_server_url = "https://evbyminsd5915.minsk.epam.com"
-
-      chef.validation_client_name = "vagrant"
-      chef.validation_key_path = File.dirname(File.expand_path(__FILE__)) + '/../../.chef/vagrant-validation.pem'
-
-      chef.add_recipe 'iptables'
-      chef.add_recipe 'iptables::ssh'
-      chef.add_recipe 'mongodb::firewall'
-      chef.add_recipe 'mongodb'
-      chef.add_recipe 'mongodb::config'
-      chef.add_recipe 'mongodb::router'
-      chef.add_recipe 'mongodb::cluster_builder'
-      chef.json = node_cfg1
-
-    end
+    chef.run_list = [
+      "recipe[mongodb::default]"
+    ]
   end
 end
+
+
