@@ -3,14 +3,14 @@ Vagrant.configure("2") do |config|
 # options are documented and commented below. For a complete reference,
 # please see the online documentation at vagrantup.com.
 
-  config.vm.hostname = "e3s-mongodb-berkshelf"
+  config.vm.hostname = "mongodb-berkshelf"
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "wheezy64"
+  config.vm.box = "debian-7.1.0-64"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
-  config.vm.box_url = "https://evbyminsd5915.minsk.epam.com/boxes/wheezy64.box"
+  config.vm.box_url = "https://opscode-vm-bento.s3.amazonaws.com/vagrant/opscode_debian-7.1.0_provisionerless.box"
 
   # Assign this VM to a host-only network IP, allowing you to access it
   # via the IP. Host-only networks can talk to the host machine as well as
@@ -49,9 +49,6 @@ Vagrant.configure("2") do |config|
   # View the documentation for the provider you're using for more
   # information on available options.
 
-  config.ssh.max_tries = 40
-  config.ssh.timeout   = 120
-
   # The path to the Berksfile to use with Vagrant Berkshelf
   # config.berkshelf.berksfile_path = "./Berksfile"
 
@@ -66,6 +63,8 @@ Vagrant.configure("2") do |config|
   # An array of symbols representing groups of cookbook described in the Vagrantfile
   # to skip installing and copying to Vagrant's shelf.
   # config.berkshelf.except = []
+
+  config.omnibus.chef_version = "11.4.4"
 
   config.vm.provision :shell, :inline => %Q{
 echo "Hacking MongoDB Package installation."

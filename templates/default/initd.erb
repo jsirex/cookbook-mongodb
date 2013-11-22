@@ -47,6 +47,14 @@
 #                    functionality are the goals for the project.
 ### END INIT INFO
 
+# Settings recommended by mongodb developers
+ulimit -f unlimited
+ulimit -t unlimited
+ulimit -v unlimited
+ulimit -n 64000
+ulimit -m unlimited
+ulimit -u 32000
+
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 <% case @type -%>
 <% when :router then -%>
