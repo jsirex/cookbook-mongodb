@@ -1,21 +1,5 @@
 action :nothing
 
-# Some options by default not valid in router configuration. Just remove it from configuration
-def filter_router_options(opts)
-  opts.delete 'dbpath'
-  opts.delete 'journal'
-  opts.delete 'nojournal'
-  opts.delete 'journalCommitInterval'
-  opts.delete 'noauth'
-  opts.delete 'nssize'
-  opts.delete 'slowms'
-  opts.delete 'smallfiles'
-  opts.delete 'syncdelay'
-  opts.delete 'oplogSize'
-  opts.delete 'shardsvr'
-  opts
-end
-
 action :install do
   return unless new_resource.configuration['ready_to_install']
 
@@ -73,8 +57,9 @@ action :install do
   end
 
   case new_resource.type
-  when :router then conf['opts'] = filter_router_options(conf['opts'])
-  when :shard then conf['opts']['replSet'] = new_resource.repl_set || "default"
+  # when :single then <custom code for the single 
+  # when :router then <custom code for the routers if any    
+  when :shard then conf['opts']['replSet'] = new_resource.repl_set || "default"  
   end
   template conf_path do
     source "mongodb.conf.erb"

@@ -2,6 +2,11 @@ require 'json'
 
 class Chef::Recipe::MongoDB
   
+  def self.each_single(node)
+    singles = node['mongodb']['singles'] || {} rescue {}
+    singles.each_pair {|name, opts| yield(name, opts)}
+  end
+  
   def self.each_shard(node)
     shards = node['mongodb']['shards'].keys rescue []
     shards.each {|shard_name| yield shard_name}
