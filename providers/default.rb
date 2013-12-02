@@ -1,43 +1,42 @@
 action :nothing
 
-action :install do
-  return unless new_resource.configuration['ready_to_install']
+action :install do  
+  
+  Chef::Log.debug("[#{new_resource.cluster_name}] Found configuration: #{new_resource.name}:")
+  conf.each_pair {|k,v| Chef::Log.debug("[#{new_resource.cluster_name}] -> #{k} => #{v}")}
 
-  conf = new_resource.configuration.to_hash
-  conf['opts'] = conf['opts'].to_hash
-  Chef::Log.debug("[#{new_resource.cluster}] Found configuration: #{new_resource.name}:")
-  conf.each_pair {|k,v| Chef::Log.debug("[#{new_resource.cluster}] -> #{k} => #{v}")}
-
-  # Configuration options
-  conf['opts']['dbpath'] ||= ::File.join(conf['install_path'], conf['db_dir'])
-  conf['opts']['logpath'] ||= ::File.join(conf['install_path'], conf['log_dir'], new_resource.name + '.log')
-  conf['opts']['pidfilepath'] ||= "/var/run/#{new_resource.name}.pid"
-
-  conf_path = ::File.join(conf['install_path'], conf['conf_dir'], conf['config_filename'])
-
-  directory conf['install_path'] do
-    owner "mongodb"
-    group "mongodb"
-    mode 00700
-    recursive true
-  end
-
-  directory ::File.dirname(conf_path) do
-    owner "mongodb"
-    group "mongodb"
-    mode 00700
-  end
-
-  directory ::File.dirname(conf['opts']['logpath']) do
+  data_dir = ::File.join(new_resource.configuration['data_dir_prefix'], new_resource.name) 
+  log_dir = ::File.join(new_resource.configuration['log_dir_prefix'], new_resource.name) 
+  config_file = ::File.join(new_resource.configuration['config_file_prefix'], new_resource.name + '.conf')
+  pid_file = ::File.join(new_resource.configuration['pid_file_prefix'], new_resource.name)
+   
+   
+  directory data_dir do
     owner "mongodb"
     group "mongodb"
     mode 00755
+    recursive true
   end
-
-  directory conf['opts']['dbpath'] do
+  
+  directory log_dir do
     owner "mongodb"
     group "mongodb"
-    mode 00700
+    mode 00755
+    recursive true
+  end
+  
+  directory new_resource.configuration['config_file_prefix'] do
+    owner "mongodb"
+    group "mongodb"
+    mode 00755
+    recursive true
+  end
+  
+  directory new_resource.configuration['pid_file_prefix'] do
+    owner "root"
+    group "root"
+    mode 00755
+    recursive true
   end
 
   template ::File.join("/etc/logrotate.d", new_resource.name) do
@@ -45,7 +44,7 @@ action :install do
     owner "root"
     group "root"
     mode 00644
-    variables :options => conf['opts']
+    variables :log_dir => log_dir
   end
 
   template ::File.join("/etc/init.d", new_resource.name) do
@@ -53,24 +52,26 @@ action :install do
     owner "root"
     group "root"
     mode 00755
-    variables :name => new_resource.name, :options => conf['opts'], :type => new_resource.type, :conf_path => conf_path
+    variables :name => new_resource.name, 
+              :ulimits => new_resource.configuration['ulimits'], 
+              :binary => new_resource.binary,
+              :config_file => config_file,
+              :pid_file => pid_file 
   end
 
-  case new_resource.type
-  # when :single then <custom code for the single 
-  # when :router then <custom code for the routers if any    
-  when :shard then conf['opts']['replSet'] = new_resource.repl_set || "default"  
-  end
-  template conf_path do
+  template config_file do
     source "mongodb.conf.erb"
     owner "mongodb"
     group "mongodb"
-    mode 00600
-    variables :options => conf['opts'], :cluster => new_resource.cluster, :type => new_resource.type
+    mode 00644
+    variables :cluster => new_resource.cluster, 
+              :binary => new_resource.binary,
+              :options => new_resource.configuration['opts']              
     notifies :restart, "service[#{new_resource.name}]"
   end
 
   service new_resource.name do
+    supports :status => true
     action :enable
   end
 

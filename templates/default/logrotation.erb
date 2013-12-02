@@ -1,4 +1,4 @@
-<%= @options['logpath'] %>
+<%= @log_dir %>
 {
         rotate 4
         weekly
@@ -7,8 +7,6 @@
         delaycompress
         sharedscripts
         postrotate
-        ##  2.0.3 or later, don't use USR1.
-        #   kill -USR1 `cat /var/run/<%= @options['pidfilepath'] %>` >/dev/null 2>&1 || true
         endscript
 }
 

@@ -6,20 +6,23 @@ default['mongodb']['cluster_name'] = "default"
 
 
 # Default attributes for all type of mongo services
-default['mongodb']['defaults']['service']['install_prefix'] = '/usr/local'
+default['mongodb']['defaults']['service']['data_dir_prefix'] = '/var/lib'
+default['mongodb']['defaults']['service']['log_dir_prefix'] = '/var/log'
+default['mongodb']['defaults']['service']['config_file_prefix'] = '/etc/mongodb'
+default['mongodb']['defaults']['service']['pid_file_prefix'] = '/var/run'
 
-# Relative path to mongodb_home
-default['mongodb']['defaults']['service']['conf_dir'] = 'etc'
-default['mongodb']['defaults']['service']['log_dir'] = 'log'
-default['mongodb']['defaults']['service']['db_dir'] = 'db'
 
-default['mongodb']['defaults']['service']['config_filename'] = 'config.conf'
-# this marker for search
-default['mongodb']['defaults']['service']['ready_to_install'] = false
+# Currently, plain text ulimits settings passed to initd script ulimit command
+# May be a security hole if somebody adds custom commands like ';rm -rf /var/log'
+default['mongodb']['defaults']['service']['ulimits'] = [
+  "-f unlimited",
+  "-t unlimited",
+  "-v unlimited",
+  "-n 64000",
+  "-m unlimited",
+  "-u 32000"
+]
 
-# File options
-default['mongodb']['defaults']['opts']['logpath'] = nil # calculated on runtime based on service_name and base_dir
-default['mongodb']['defaults']['opts']['dbpath'] = nil # calculated on runtime based on service_name and base_dir
-default['mongodb']['defaults']['opts']['pidfilepath'] = nil # calculated on runtime
+
 default['mongodb']['defaults']['opts']['logappend'] = true
 

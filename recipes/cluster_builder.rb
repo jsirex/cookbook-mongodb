@@ -60,8 +60,8 @@ end
 router = nil
 routers.each do |r|
   if MongoDB.server_available?(r)
-  router = r
-  break
+    router = r
+    break
   end
 end
 
