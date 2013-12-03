@@ -8,7 +8,6 @@ version          "0.1.13"
 depends          "apt"
 depends          "iptables"
 depends          "build-essential"
-depends          "ulimit"
 
 #supports         "ubuntu"
 supports         "debian"

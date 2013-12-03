@@ -1,3 +1,4 @@
+include_recipe "mongodb::_configuration"
 include_recipe "apt"
 
 apt_repository "mongodb-10gen" do

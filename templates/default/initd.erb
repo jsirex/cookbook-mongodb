@@ -48,12 +48,12 @@
 ### END INIT INFO
 
 # Settings recommended by mongodb developers
-<%= @ulimits.each do |ulimit| %>
+<% @ulimits.each do |ulimit| %>
 ulimit <%= ulimit %>
 <% end -%>
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-<% case @binary -%>
+<% case @type -%>
 <% when :mongos then -%>
 DAEMON=/usr/bin/mongos
 <% when :mongod then -%>

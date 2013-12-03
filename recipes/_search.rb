@@ -3,7 +3,7 @@ cluster_name = node['mongodb']['cluster_name']
 query = []
 query << "chef_environment:#{node.chef_environment}"
 query << "mongodb_cluster_name:#{cluster_name}"
-query << "mongodb_shards:*"
+query << "mongodb_shards*:*"
 # String used to search for config servers
 node.default['mongodb']['search']['shards'] = query.join(" AND ")
 
@@ -11,14 +11,14 @@ node.default['mongodb']['search']['shards'] = query.join(" AND ")
 query = []
 query << "chef_environment:#{node.chef_environment}"
 query << "mongodb_cluster_name:#{cluster_name}"
-query << "mongodb_configs:*"
+query << "mongodb_configs*:*"
 node.default['mongodb']['search']['configs'] = query.join(" AND ")
 
 # Routers
 query = []
 query << "chef_environment:#{node.chef_environment}"
 query << "mongodb_cluster_name:#{cluster_name}"
-query << "mongodb_routers:*"
+query << "mongodb_routers*:*"
 node.default['mongodb']['search']['routers'] = query.join(" AND ")
 
 

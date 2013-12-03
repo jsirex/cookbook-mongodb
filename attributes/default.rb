@@ -7,7 +7,7 @@ default['mongodb']['cluster_name'] = "default"
 
 # Default attributes for all type of mongo services
 default['mongodb']['defaults']['service']['data_dir_prefix'] = '/var/lib'
-default['mongodb']['defaults']['service']['log_dir_prefix'] = '/var/log'
+default['mongodb']['defaults']['service']['log_file_prefix'] = '/var/log/mongodb'
 default['mongodb']['defaults']['service']['config_file_prefix'] = '/etc/mongodb'
 default['mongodb']['defaults']['service']['pid_file_prefix'] = '/var/run'
 

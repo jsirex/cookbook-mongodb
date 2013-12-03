@@ -1,38 +1,39 @@
+# Support whyrun
+def whyrun_supported?
+  true
+end
+
 action :nothing
 
-action :install do  
-  
+action :install do
+
+  conf = new_resource.configuration
+
   Chef::Log.debug("[#{new_resource.cluster_name}] Found configuration: #{new_resource.name}:")
   conf.each_pair {|k,v| Chef::Log.debug("[#{new_resource.cluster_name}] -> #{k} => #{v}")}
 
-  data_dir = ::File.join(new_resource.configuration['data_dir_prefix'], new_resource.name) 
-  log_dir = ::File.join(new_resource.configuration['log_dir_prefix'], new_resource.name) 
-  config_file = ::File.join(new_resource.configuration['config_file_prefix'], new_resource.name + '.conf')
-  pid_file = ::File.join(new_resource.configuration['pid_file_prefix'], new_resource.name)
-   
-   
-  directory data_dir do
+  directory conf['opts']['dbpath'] do
+    owner "mongodb"
+    group "mongodb"
+    mode 00755
+    recursive true
+  end if new_resource.type == :mongod
+
+  directory conf['log_file_prefix'] do
     owner "mongodb"
     group "mongodb"
     mode 00755
     recursive true
   end
-  
-  directory log_dir do
+
+  directory conf['config_file_prefix'] do
     owner "mongodb"
     group "mongodb"
     mode 00755
     recursive true
   end
-  
-  directory new_resource.configuration['config_file_prefix'] do
-    owner "mongodb"
-    group "mongodb"
-    mode 00755
-    recursive true
-  end
-  
-  directory new_resource.configuration['pid_file_prefix'] do
+
+  directory conf['pid_file_prefix'] do
     owner "root"
     group "root"
     mode 00755
@@ -44,7 +45,7 @@ action :install do
     owner "root"
     group "root"
     mode 00644
-    variables :log_dir => log_dir
+    variables :log_file => conf['opts']['logpath']
   end
 
   template ::File.join("/etc/init.d", new_resource.name) do
@@ -52,21 +53,21 @@ action :install do
     owner "root"
     group "root"
     mode 00755
-    variables :name => new_resource.name, 
-              :ulimits => new_resource.configuration['ulimits'], 
-              :binary => new_resource.binary,
-              :config_file => config_file,
-              :pid_file => pid_file 
+    variables :name => new_resource.name,
+              :ulimits => conf['ulimits'],
+              :type => new_resource.type,
+              :config_file => conf['config_file'],
+              :pid_file => conf['opts']['pidfilepath']
   end
 
-  template config_file do
+  template conf['config_file'] do
     source "mongodb.conf.erb"
     owner "mongodb"
     group "mongodb"
     mode 00644
-    variables :cluster => new_resource.cluster, 
-              :binary => new_resource.binary,
-              :options => new_resource.configuration['opts']              
+    variables :cluster => new_resource.cluster_name,
+              :type => new_resource.type,
+              :options => conf['opts']
     notifies :restart, "service[#{new_resource.name}]"
   end
 
