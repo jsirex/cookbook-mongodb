@@ -59,6 +59,7 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
     srv.vm.hostname = "mongodb-shard-000"
 
     srv.vm.provision :chef_client do |chef|
+      chef.log_level = :debug
       chef.json = {
         'mongodb' => {
           'shards' => {
@@ -67,22 +68,28 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
                 'opts' => {
                   'smallfiles' => true,
                   'oplogSize' => 512,
-                  'port' => 30000
+                  'port' => 25017
                 }
               },
               'mongodb-sh000-2' => {
                 'opts' => {
                   'smallfiles' => true,
                   'oplogSize' => 512,
-                  'port' => 33000
+                  'port' => 23017
                 }
               }
             },
             'shard001' => {
               'mongodb-sh001-arbiter' => {
                 'arbiter' => true,
-                'opts' => {
-                  'port' => 20017
+                'opts' => {                  
+                  'port' => 30017,
+                }
+              },
+              'mongodb-sh001-arbiter2' => {
+                'arbiter' => true,
+                'opts' => {                  
+                  'port' => 33017,
                 }
               }
             }
@@ -109,14 +116,14 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
                 'opts' => {
                   'smallfiles' => true,
                   'oplogSize' => 512,
-                  'port' => 30000
+                  'port' => 25017
                 }
               },
               'mongodb-sh001-2' => {
                 'opts' => {
                   'smallfiles' => true,
                   'oplogSize' => 512,
-                  'port' => 33000
+                  'port' => 23017
                 }
               }
             },
@@ -124,7 +131,7 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
               'mongodb-sh000-arbiter' => {
                 'arbiter' => true,
                 'opts' => {
-                  'port' => 20017
+                  'port' => 30017
                 }
               }
             }
@@ -143,6 +150,7 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
     srv.vm.hostname = "mongodb-config"
 
     srv.vm.provision :chef_client do |chef|
+      chef.log_level = :debug
       chef.json = {
         'mongodb' => {
           'configs' => {

@@ -1,7 +1,6 @@
 require 'json'
 
 class Chef::Recipe::MongoDB
-
   def self.each_single(node)
     singles = node['mongodb']['singles'] || {} rescue {}
     singles.each_pair {|name, opts| yield(name, opts)}
@@ -27,89 +26,94 @@ class Chef::Recipe::MongoDB
     routers.each_pair {|name, opts| yield(name, opts)}
   end
 
+  # In mongo server connection is tcp endpoint in format "host:port"
   def self.server_available?(server)
     require 'rubygems'
     require 'mongo'
-
     return false unless server
     host, port = server.split(':')
-    connection = nil
+
     begin
       connection = ::Mongo::MongoClient.new(host, port, :slave_ok => true, :op_timeout => 5)
     rescue
+      return false
+    ensure
     connection.close if connection && connection.active?
-    return false
     end
-    connection.close if connection && connection.active?
+
     true
   end
 
   # @return replicaset status in [:ok, :conf, :reconf]
-  def self.check_replicaset_status(name, servers)
+  def self.check_replicaset_status(name, members)
     require 'rubygems'
     require 'mongo'
-
-    connection = nil
+    
+    status = :none
     begin
-      connection = ::Mongo::MongoReplicaSetClient.new(servers.map{|x| "#{x[:host]}:#{x[:port]}"}, :read => :secondary_preferred)
+      connection = ::Mongo::MongoReplicaSetClient.new(members.map{|x| x['host']}, :read => :secondary_preferred)      
+      config = connection['local']['system']['replset'].find_one({"_id" => name})
+      
+      config_member_hosts = config['members'].map {|m| m['host']}.sort
+      member_hosts = members.map{|x| x['host']}.sort
+     
+      status = member_hosts == config_member_hosts ? :ok : :reconf      
     rescue ::Mongo::ConnectionFailure => e
-    # replica not configured
-      return :conf
+      status = :conf
+    ensure
+      connection.close if connection && connection.active?
     end
-    config = connection['local']['system']['replset'].find_one({"_id" => name})
-    replica_hosts = config['members'].map {|m| m['host']}.sort
-    connection.close if connection && connection.active?
-    if replica_hosts == servers.map{|x| "#{x[:host]}:#{x[:port]}"}
-      return :ok
-    else
-      return :reconf
-    end
+    status
   end
-
-  def self.configure_replicaset(cluster_name, repl_name, servers)
-    # lazy require, to move loading this modules to runtime of the cookbook
+  
+  def self.member_can_become_primary?(member)
+    member['arbiterOnly'] != true && member['priority'] != 0 && member['hidden'] != true    
+  end
+  
+  def self.configure_replicaset(cluster_name, repl_name, members)
     require 'rubygems'
     require 'mongo'
-
-    rs_members = []
-    servers.sort{|x,y| "#{x[:host]}:#{x[:port]}" <=> "#{y[:host]}:#{y[:port]}"}.each_with_index do |server, index|
-      rs_members << {"_id" => index, "host" => "#{server[:host]}:#{server[:port]}", "arbiterOnly" => server[:arbiter] ? true : false}
+    
+    members.sort!{|x,y| x['host'] <=> y['host']}
+    members.each_index do |index|
+      members[index]['_id'] = index      
     end
-
+    
+    # find first primary supported member
+    index = members.index do |member|
+      self.server_available?(member['host']) && self.member_can_become_primary?(member)
+    end
+    
+    unless index 
+      Chef::Log.warn("[#{cluster_name}] No servers available for #{repl_name}. Give up.")
+      return
+    end
+    
+    master = members[index]    
+    
     cmd = BSON::OrderedHash.new
     cmd['replSetInitiate'] = {
       "_id" => repl_name,
-      "members" => rs_members
+      "members" => members
     }
-
-    connection = nil
-    server = nil
-    servers.each do |srv|
-      if self.server_available?("#{srv[:host]}:#{srv[:port]}")
-        server = "#{srv[:host]}:#{srv[:port]}"
-      break
-      end
-    end
-    Chef::Log.warn("[#{cluster_name}] No servers available for #{repl_name}. Give up.") unless server
-
+        
     begin
-      host, port = server.split(':')
       # connect to the first non-arbiter
-      connection = ::Mongo::MongoClient.new(host, port, :op_timeout => 5, :slave_ok => true)
-    rescue
-      Chef::Log.warn("[#{cluster_name}] Could not connect to database: '#{host}:#{port}'")
-    return
+      host, port = master['host'].split(':')
+      connection = ::Mongo::MongoClient.new(host, port, :op_timeout => 5)
+    rescue ::Mongo::MongoRubyError => e
+      Chef::Log.warn("[#{cluster_name}] Could not connect to database: #{e}")
+      return
     end
 
-    raise "Lost db connection" if connection.nil?
-    result = nil
     begin
       admin = connection['admin']
       result = admin.command(cmd, :check_response => false)
     rescue ::Mongo::OperationTimeout
       Chef::Log.info("[#{cluster_name}] Started configuring the #{repl_name} replicaset, this will take some time, another run should run smoothly.")
-    connection.close if connection.active?
-    return
+      return
+    ensure
+      connection.close if connection && connection.active?
     end
 
     if result.fetch("ok", nil) == 1
@@ -119,56 +123,58 @@ class Chef::Recipe::MongoDB
     elsif !result.fetch("errmsg", nil).nil?
       Chef::Log.error("[#{cluster_name}] Failed to configure #{repl_name} replicaset, reason: #{result.inspect}")
     end
-    connection.close if connection && connection.active?
   end
 
-  def self.reconfigure_replicaset(cluster_name, repl_name, servers)
+  def self.reconfigure_replicaset(cluster_name, repl_name, members)
     require 'rubygems'
     require 'mongo'
+    
+    members.sort!{|x,y| x['host'] <=> y['host']}
+    
     connection = nil
     begin
-      connection = ::Mongo::MongoReplicaSetClient.new(servers.map{|x| "#{x[:host]}:#{x[:port]}"}, :read => :primary)
+      connection = ::Mongo::MongoReplicaSetClient.new(members.map{|x| x['host']}, :read => :primary)
     rescue ::Mongo::ConnectionFailure => e
-      Chef::Log.warn("[#{cluster_name}] Could not connect to replicaset #{repl_name}: #{servers.inspect}")
+      Chef::Log.warn("[#{cluster_name}] Could not connect to replicaset #{repl_name}: #{members.inspect}")
     end
 
     config = connection['local']['system']['replset'].find_one({"_id" => repl_name})
-    Chef::Log.info(config.inspect)
+    Chef::Log.debug("[#{cluster_name}] Detected old configuration: #{config.inspect}")
     if config
       # Get new_servers list
-      new_servers = servers.sort{|x,y| "#{x[:host]}:#{x[:port]}" <=> "#{y[:host]}:#{y[:port]}"}
+      new_servers = members.dup
       config['members'].each do |c_member|
-        new_servers.delete_if {|m| "#{m['host']}:#{m['port']}" == c_member['host']}
+        new_servers.delete_if {|m| m['host'] == c_member['host']}
       end
-      Chef::Log.info(config.inspect)
-      Chef::Log.info(servers.inspect)
+      
       #remove from config servers, which actually removed (not in servers)
       config['members'].delete_if do |c_member|
-        servers.index{|x| "#{x[:host]}:#{x[:port]}" == c_member['host']}.nil?
+        members.index{|x| x['host'] == c_member['host']}.nil?
       end
 
-      Chef::Log.info(config.inspect)
-
-      version = config['version']
+      config['version'] = config['version'] + 1
       next_index = config['members'].map{|m| m['_id']}.max + 1
-      config['version'] = version + 1
+      
       new_servers.each do |new_server|
-        config['members'] << {'_id' => next_index, 'host' => "#{new_server[:host]}:#{new_server[:port]}"}
+        new_server['_id'] = next_index
+        config['members'] << new_server
         next_index +=1
       end
+      
+      Chef::Log.debug("[#{cluster_name}] New configuration: #{config.inspect}")
 
-      Chef::Log.info("Result config: #{config.inspect}")
       cmd = BSON::OrderedHash.new
       cmd['replSetReconfig'] = config
 
       begin
         rs_admin = connection['admin']
         result = rs_admin.command(cmd, :check_response => true)
-      #rescue
-      #  Chef::Log.info("[#{cluster_name}] #{repl_name} reconfiguration scheduled.")
+        Chef::Log.debug("[#{cluster_name}] #{repl_name} reconfiguration respone: #{result.inspect}")
+      rescue
+       Chef::Log.info("[#{cluster_name}] #{repl_name} reconfiguration scheduled.")
       end
     else
-      Chef::Log.warn("[#{cluster_name}] Unable to get replicaset config for #{repl_name}: #{servers.inspect}. Strange")
+      Chef::Log.warn("[#{cluster_name}] Unable to get replicaset config for #{repl_name}: #{members.inspect}. Strange")
     end
     connection.close if connection && connection.active?
   end
@@ -198,26 +204,25 @@ class Chef::Recipe::MongoDB
   end
 
   # String cluster_name
-  # String router
+  # String router (host:port)
   # String shard_name
-  # Array servers
-  def self.add_shard(cluster_name, router, shard_name, servers)
+  # Array members (host:port)
+  def self.add_shard(cluster_name, router, shard_name, hosts)
     # lazy require, to move loading this modules to runtime of the cookbook
     require 'rubygems'
     require 'mongo'
-
+    
+    result = nil
     connection = nil
     begin
       host, port = router.split(':')
       connection = ::Mongo::MongoClient.new(host, port, :op_timeout => 5)
       admin = connection['admin']
       cmd = BSON::OrderedHash.new
-      cmd['addShard'] = "#{shard_name}/#{servers.join(',')}"
+      cmd['addShard'] = "#{shard_name}/#{hosts.join(',')}"
       result = admin.command(cmd, :check_response => false)
     rescue ::Mongo::OperationTimeout
-      Chef::Log.info("[#{cluster_name}] Adding shard '#{shard_name}' timed out. Will try again on next chef run")
-    rescue Exception => e
-    # ignoring any other exceptions
+      Chef::Log.info("[#{cluster_name}] Adding shard '#{shard_name}' timed out. Will try again on next chef run")    
     end
 
     if result.fetch("ok", nil) == 1
