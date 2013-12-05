@@ -38,7 +38,7 @@ class Chef::Recipe::MongoDB
     rescue
       return false
     ensure
-    connection.close if connection && connection.active?
+      connection.close if connection && connection.active?
     end
 
     true
@@ -49,7 +49,6 @@ class Chef::Recipe::MongoDB
     require 'rubygems'
     require 'mongo'
     
-    status = :none
     begin
       connection = ::Mongo::MongoReplicaSetClient.new(members.map{|x| x['host']}, :read => :secondary_preferred)      
       config = connection['local']['system']['replset'].find_one({"_id" => name})
@@ -57,13 +56,12 @@ class Chef::Recipe::MongoDB
       config_member_hosts = config['members'].map {|m| m['host']}.sort
       member_hosts = members.map{|x| x['host']}.sort
      
-      status = member_hosts == config_member_hosts ? :ok : :reconf      
+      return member_hosts == config_member_hosts ? :ok : :reconf      
     rescue ::Mongo::ConnectionFailure => e
-      status = :conf
+      return :conf
     ensure
       connection.close if connection && connection.active?
     end
-    status
   end
   
   def self.member_can_become_primary?(member)
@@ -136,6 +134,7 @@ class Chef::Recipe::MongoDB
       connection = ::Mongo::MongoReplicaSetClient.new(members.map{|x| x['host']}, :read => :primary)
     rescue ::Mongo::ConnectionFailure => e
       Chef::Log.warn("[#{cluster_name}] Could not connect to replicaset #{repl_name}: #{members.inspect}")
+      return
     end
 
     config = connection['local']['system']['replset'].find_one({"_id" => repl_name})
@@ -193,8 +192,9 @@ class Chef::Recipe::MongoDB
     rescue Exception => e
       Chef::Log.warn("#{cluter_name} Listing existing shards on #{router} failed: : #{e}")
     ensure
-    connection.close if connection && connection.active?
+      connection.close if connection && connection.active?
     end
+    
     if result['ok'] == 1
       return result['shards'].map {|sh| sh['_id']}
     else
@@ -224,14 +224,16 @@ class Chef::Recipe::MongoDB
     rescue ::Mongo::OperationTimeout
       Chef::Log.info("[#{cluster_name}] Adding shard '#{shard_name}' timed out. Will try again on next chef run")    
     end
-
-    if result.fetch("ok", nil) == 1
-      Chef::Log.info("[#{cluster_name}] Shard #{shard_name} has been added")
-    elsif result.fetch('errmsg', nil) =~ /duplicate key/
-      Chef::Log.info("[#{cluster_name}] Shard #{shard_name} already added (duplicate key error)")
-    else
-      Chef::Log.warn("[#{cluster_name}] Adding #{shard_name} returned: #{result.fetch('errmsg', nil)}")
-    end
+    
+    unless result.nil?
+      if result.fetch("ok", nil) == 1
+        Chef::Log.info("[#{cluster_name}] Shard #{shard_name} has been added")
+      elsif result.fetch('errmsg', nil) =~ /duplicate key/
+        Chef::Log.info("[#{cluster_name}] Shard #{shard_name} already added (duplicate key error)")
+      else
+        Chef::Log.warn("[#{cluster_name}] Adding #{shard_name} returned: #{result.fetch('errmsg', nil)}")
+      end  
+    end   
 
     connection.close if connection && connection.active?
   end # def self.add_shard

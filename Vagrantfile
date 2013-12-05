@@ -59,7 +59,7 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
     srv.vm.hostname = "mongodb-shard-000"
 
     srv.vm.provision :chef_client do |chef|
-      chef.log_level = :debug
+      #chef.log_level = :debug
       chef.json = {
         'mongodb' => {
           'shards' => {
@@ -84,12 +84,6 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
                 'arbiter' => true,
                 'opts' => {                  
                   'port' => 30017,
-                }
-              },
-              'mongodb-sh001-arbiter2' => {
-                'arbiter' => true,
-                'opts' => {                  
-                  'port' => 33017,
                 }
               }
             }
@@ -150,7 +144,7 @@ sudo wget --quiet --no-check-certificate --directory-prefix=/var/cache/apt/archi
     srv.vm.hostname = "mongodb-config"
 
     srv.vm.provision :chef_client do |chef|
-      chef.log_level = :debug
+      #chef.log_level = :debug
       chef.json = {
         'mongodb' => {
           'configs' => {
