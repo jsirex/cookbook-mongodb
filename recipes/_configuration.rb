@@ -24,7 +24,7 @@ MongoDB.each_shard(node) do |shard_name|
   end
 end
 
-# Only After all defaults have been aplied calculate all thinks
+# Only After all defaults have been aplied calculate all things
 MongoDB.each_single(node) do |service_name, conf|  
   node.default['mongodb']['singles'][service_name]['config_file'] = ::File.join(conf['config_file_prefix'], service_name + '.conf')   
   node.default['mongodb']['singles'][service_name]['opts']['logpath'] = ::File.join(conf['log_file_prefix'], service_name + '.log') 
