@@ -11,9 +11,6 @@
     },
     "build-essential": {
       "locked_version": "1.4.2"
-    },
-    "ulimit": {
-      "locked_version": "0.3.1"
     }
   }
 }

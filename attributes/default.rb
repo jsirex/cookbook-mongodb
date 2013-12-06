@@ -26,4 +26,5 @@ default['mongodb']['defaults']['service']['ulimits'] = [
 
 
 default['mongodb']['defaults']['opts']['logappend'] = true
+default['mongodb']['defaults']['opts']['port'] = 27017
 
