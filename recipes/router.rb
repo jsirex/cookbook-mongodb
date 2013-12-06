@@ -1,6 +1,19 @@
 include_recipe "mongodb::default"
 include_recipe "mongodb::_search"
 
+defaults = node['mongodb']['defaults']
+
+MongoDB.each_router(node) do |service_name, conf|
+  node.default['mongodb']['routers'][service_name] = defaults['service']  
+  node.default['mongodb']['routers'][service_name]['opts'] = DeepMerge.merge(defaults['opts'], defaults['router'])
+end
+
+MongoDB.each_router(node) do |service_name, conf|  
+  node.default['mongodb']['routers'][service_name]['config_file'] = ::File.join(conf['config_file_prefix'], service_name + '.conf')
+  node.default['mongodb']['routers'][service_name]['opts']['logpath'] = ::File.join(conf['log_file_prefix'], service_name + '.log') 
+  node.default['mongodb']['routers'][service_name]['opts']['pidfilepath'] = ::File.join(conf['pid_file_prefix'], service_name)   
+end
+
 
 cn = node['mongodb']['cluster_name']
 config_nodes = search(:node, node['mongodb']['search']['configs'])
