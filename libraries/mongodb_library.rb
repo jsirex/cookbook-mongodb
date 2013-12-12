@@ -140,6 +140,10 @@ class Chef::Recipe::MongoDB
     config = connection['local']['system']['replset'].find_one({"_id" => repl_name})
     Chef::Log.debug("[#{cluster_name}] Detected old configuration: #{config.inspect}")
     if config
+
+      config['version'] = config['version'] + 1
+      next_index = config['members'].map{|m| m['_id']}.max + 1
+
       # Get new_servers list
       new_servers = members.dup
       config['members'].each do |c_member|
@@ -151,9 +155,6 @@ class Chef::Recipe::MongoDB
         members.index{|x| x['host'] == c_member['host']}.nil?
       end
 
-      config['version'] = config['version'] + 1
-      next_index = config['members'].map{|m| m['_id']}.max + 1
-      
       new_servers.each do |new_server|
         new_server['_id'] = next_index
         config['members'] << new_server
