@@ -1,6 +1,21 @@
-.DS_Store
-.project
-*.swp
-/test/kitchen/.kitchen
+*~
+*#
+.#*
+\#*#
+.*.sw[a-z]
+*.un~
+pkg/
+
+# Berkshelf
 .vagrant
-.zero-knife.rb
+/cookbooks
+Berksfile.lock
+
+# Bundler
+Gemfile.lock
+bin/*
+.bundle/*
+
+.kitchen/
+.kitchen.local.yml
+reports/

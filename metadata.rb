@@ -4,7 +4,7 @@ maintainer_email "yauhen_artsiukhou@epam.com"
 license          "EPAM"
 description      "Installs/Configures mongodb"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          "0.1.14"
+version          "1.0.0"
 depends          "apt"
 depends          "iptables"
 depends          "build-essential"

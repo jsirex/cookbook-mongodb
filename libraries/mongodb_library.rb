@@ -65,7 +65,7 @@ class Chef::Recipe::MongoDB
   end
   
   def self.member_can_become_primary?(member)
-    member['arbiterOnly'] != true && member['priority'] != 0 && member['hidden'] != true    
+    !member['arbiterOnly'] && member['priority'] != 0 && !member['hidden']    
   end
   
   def self.configure_replicaset(cluster_name, repl_name, members)
@@ -137,10 +137,9 @@ class Chef::Recipe::MongoDB
       return
     end
 
-    config = connection['local']['system']['replset'].find_one({"_id" => repl_name})
-    Chef::Log.debug("[#{cluster_name}] Detected old configuration: #{config.inspect}")
+    config = connection['local']['system']['replset'].find_one({"_id" => repl_name})    
     if config
-
+      Chef::Log.debug("[#{cluster_name}] Detected old configuration: #{config.inspect}")
       config['version'] = config['version'] + 1
       next_index = config['members'].map{|m| m['_id']}.max + 1
 
