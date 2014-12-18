@@ -8,14 +8,14 @@ pkg/
 
 # Berkshelf
 .vagrant
-/cookbooks
-Berksfile.lock
+.berkshelf/cookbooks
+.berkshelf/tmp
 
 # Bundler
-Gemfile.lock
 bin/*
 .bundle/*
 
 .kitchen/
 .kitchen.local.yml
 reports/
+.berkshelf/.cache

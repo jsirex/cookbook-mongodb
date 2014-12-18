@@ -1,22 +1,29 @@
 source 'https://rubygems.org'
 
-# get this from git for the chefignore issues
-gem 'berkshelf', '~> 3.0'
-gem 'chef-zero'
+gem 'chef', '~> 12.0'
 
-group 'develop' do
-  gem 'test-kitchen'
-  gem 'kitchen-vagrant'
-  gem 'kitchen-docker'
+group :lint do
+  gem 'foodcritic', '~> 3.0'
+  gem 'rubocop', '~> 0.24'
+end
+
+group :unit do
+  gem 'berkshelf', '~> 3.1'
+  gem 'chefspec', '~> 4.0'
+  gem 'ci_reporter_rspec'
+end
+
+group :development do
   gem 'rake'
-  gem 'foodcritic', '>= 3.0.3'
-  gem 'rubocop', '>= 0.20.1'
-  gem 'knife-cookbook-doc'
-  gem 'knife-spork'
-  gem 'chefspec'
   gem 'git'
 end
 
-group 'ci' do
-  gem 'ci_reporter'
+group :knife do
+  gem 'knife-cookbook-doc'
+  gem 'knife-supermarket'
 end
+
+# Kitchen
+# Currently there are conflicts
+# gem 'test-kitchen', '~> 1.2'
+# gem 'kitchen-docker'

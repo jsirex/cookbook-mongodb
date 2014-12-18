@@ -1,7 +1,6 @@
 require 'serverspec'
 
-include Serverspec::Helper::Exec
-include Serverspec::Helper::DetectOS
+set :backend, :exec
 
 describe command('/bin/true') do
   it { should return_exit_status 0 }
