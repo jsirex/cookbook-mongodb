@@ -1,6 +1,6 @@
 node.override['build_essential']['compiletime'] = true
-include_recipe "build-essential"
-include_recipe "mongodb::_search"
+include_recipe 'build-essential'
+include_recipe 'mongodb::_search'
 
 chef_gem 'bson_ext'
 chef_gem 'mongo'
@@ -11,11 +11,11 @@ Chef::Log.info("[cluster_builder] Found cluster: #{cluster_name}")
 shard_nodes = search(:node, node['mongodb']['search']['shards'])
 
 # Each shard probably replica, let get its config and do rs.conf()
-shards = Hash.new
+shards = {}
 shard_nodes.each do |s_node|
   MongoDB.each_shard(s_node) do |shard_name|
-  shards[shard_name] ||= []
-    MongoDB.each_shard_server(s_node, shard_name) do |service_name, conf|
+    shards[shard_name] ||= []
+    MongoDB.each_shard_server(s_node, shard_name) do |_service_name, conf|
       shards[shard_name] << conf['rs_member_conf'].to_hash
     end
   end
@@ -47,11 +47,11 @@ shards.each_pair do |shard_name, members|
   end # case
 end
 
- # Updating Shards
+# Updating Shards
 router_nodes = search(:node, node['mongodb']['search']['routers'])
 routers = []
 router_nodes.each do |r_node|
-  MongoDB.each_router(r_node) do |router_name, conf|
+  MongoDB.each_router(r_node) do |_router_name, conf|
     routers << "#{r_node['fqdn']}:#{conf['opts']['port']}"
   end
 end
@@ -66,15 +66,15 @@ end
 
 if router
   existing_shards = MongoDB.get_existing_shards(cluster_name, router)
-  
+
   new_shards = shards.dup
-  new_shards.delete_if {|k,v| existing_shards.include?(k)}
+  new_shards.delete_if { |k, _v| existing_shards.include?(k) }
   Chef::Log.info("[cluster_builder] [#{cluster_name}] No new shards were found") if new_shards.empty?
   new_shards.each_pair do |shard_name, members|
     Chef::Log.info("[cluster_builder] [#{cluster_name}] Found new shard: #{shard_name}")
     ruby_block "add_#{shard_name}_shard" do
       block do
-        MongoDB.add_shard(cluster_name, router, shard_name, members.map{|x| x['host']})
+        MongoDB.add_shard(cluster_name, router, shard_name, members.map { |x| x['host'] })
       end
       action :create
     end
@@ -82,4 +82,3 @@ if router
 else
   Chef::Log.warn("[#{cluster_name}] Could not connect to any router. Give up!")
 end
-
