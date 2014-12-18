@@ -1,6 +1,5 @@
 require 'chefspec'
 require 'chefspec/berkshelf'
-require 'chefspec/server'
 require 'chefspec/cacher'
 
 Dir['./spec/support/**/*.rb'].sort.each { |f| require f }

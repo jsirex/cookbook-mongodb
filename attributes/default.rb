@@ -1,6 +1,6 @@
 # Which debian package to use
 default['mongodb']['package'] = 'mongodb-10gen'
-default['mongodb']['version'] = '2.4.8' # Latest package
+default['mongodb']['version'] = '2.4.12'
 
 default['mongodb']['cluster_name'] = 'default'
 

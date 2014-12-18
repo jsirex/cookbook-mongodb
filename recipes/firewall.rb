@@ -11,7 +11,7 @@ services_list = {}
 allowed_ips = remote_nodes.map { |n| n['ipaddress'] }
 
 # Load allow list from databag
-# TODO need a way to rebuild firewall more nice way for external services
+# TODO: need a way to rebuild firewall more nice way for external services
 allowed_clients = data_bag_item(:mongodb, 'allowed_clients') rescue nil
 unless allowed_clients.nil? || allowed_clients[node.chef_environment].nil?
   ips = [allowed_clients[node.chef_environment]].flatten.map { |client| Socket.getaddrinfo(client, nil).first[3] }

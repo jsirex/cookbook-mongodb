@@ -1,5 +1,3 @@
-include_recipe 'apt'
-
 apt_repository 'mongodb-10gen' do
   case node['platform']
   when 'ubuntu'
@@ -12,7 +10,7 @@ apt_repository 'mongodb-10gen' do
   keyserver 'keyserver.ubuntu.com'
   key '7F0CEB10'
   action :add
-  notifies :run, 'execute[apt-get update]', :immediately  # recipe[apt::default]
+#  notifies :run, 'execute[apt-get update]', :immediately
 end
 
 file '/etc/default/mongodb' do
@@ -20,8 +18,6 @@ file '/etc/default/mongodb' do
   owner 'root'
   content 'ENABLE_MONGODB=no'
 end
-
-Chef::Application.fatal! "Cookbook requires node['mongodb']['version'] to be explicity defined!", 100 unless node['mongodb']['version']
 
 package node['mongodb']['package'] do
   version node['mongodb']['version']
