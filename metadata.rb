@@ -4,7 +4,10 @@ maintainer_email 'yauhen_artsiukhou@epam.com'
 license          'EPAM'
 description      'Installs/Configures mongodb'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
-version          '1.1.0'
+issues_url       'https://github.com/jsirex/cookbook-mongodb/issues'
+source_url       'https://github.com/jsirex/cookbook-mongodb.git'
+version          '2.0.0'
+
 depends          'apt'
 depends          'iptables'
 depends          'build-essential'
@@ -18,6 +21,6 @@ recipe 'mongodb::config', 'Installs mongodb as config server'
 recipe 'mongodb::route', 'Installs mongodb as mongos router'
 recipe 'mongodb::shard', 'Installs mongodb as shard'
 recipe 'mongodb::firewall', 'Enables firewall on all mongodb ports'
-recipe 'mongodb::cluster_build', 'An Master which performs cluster configuration'
+recipe 'mongodb::cluster_builder', 'An Master which performs cluster configuration'
 
 

@@ -10,7 +10,6 @@ apt_repository 'mongodb-10gen' do
   keyserver 'keyserver.ubuntu.com'
   key '7F0CEB10'
   action :add
-#  notifies :run, 'execute[apt-get update]', :immediately
 end
 
 file '/etc/default/mongodb' do
