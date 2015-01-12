@@ -56,7 +56,7 @@ action :install do
               :ulimits => conf['ulimits'],
               :type => new_resource.type,
               :config_file => conf['config_file'],
-              :pid_file => conf['opts']['pidfilepath']
+              :pid_file => ::File.join(conf['pid_file_prefix'], new_resource.name)
   end
 
   template conf['config_file'] do

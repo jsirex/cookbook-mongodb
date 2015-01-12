@@ -17,5 +17,13 @@ suites:
   - name: default
     run_list:
       - recipe[mongodb]
+      - recipe[mongodb::single]
     attributes:
+      mongodb:
+        singles:
+          mongodb-test:
+            opts:
+              oplogSize: 512
+              smallfiles: true
+              port: 27018
       

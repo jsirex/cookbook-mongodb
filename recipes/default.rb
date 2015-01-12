@@ -12,10 +12,10 @@ apt_repository 'mongodb-10gen' do
   action :add
 end
 
-file '/etc/default/mongodb' do
+file '/etc/default/mongod' do
   action :create_if_missing
   owner 'root'
-  content 'ENABLE_MONGODB=no'
+  content 'ENABLE_MONGOD=no'
 end
 
 package node['mongodb']['package'] do

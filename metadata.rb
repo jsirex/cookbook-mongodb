@@ -6,7 +6,7 @@ description      'Installs/Configures mongodb'
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 issues_url       'https://github.com/jsirex/cookbook-mongodb/issues'
 source_url       'https://github.com/jsirex/cookbook-mongodb.git'
-version          '2.0.0'
+version          '2.0.1'
 
 depends          'apt'
 depends          'iptables'

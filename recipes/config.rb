@@ -10,7 +10,6 @@ end
 MongoDB.each_config(node) do |service_name, conf|
   node.default['mongodb']['configs'][service_name]['config_file'] = ::File.join(conf['config_file_prefix'], service_name + '.conf')
   node.default['mongodb']['configs'][service_name]['opts']['logpath'] = ::File.join(conf['log_file_prefix'], service_name + '.log')
-  node.default['mongodb']['configs'][service_name]['opts']['pidfilepath'] = ::File.join(conf['pid_file_prefix'], service_name)
   node.default['mongodb']['configs'][service_name]['opts']['dbpath'] = ::File.join(conf['data_dir_prefix'], service_name)
 end
 
