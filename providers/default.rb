@@ -71,7 +71,7 @@ action :install do
   end
 
   service new_resource.name do
-    supports :status => true
-    action :enable
+    supports :status => true, :restart => true
+    action [:enable, :start]
   end
 end
