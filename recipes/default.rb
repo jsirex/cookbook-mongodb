@@ -18,7 +18,9 @@ file '/etc/default/mongod' do
   content 'ENABLE_MONGOD=no'
 end
 
-package node['mongodb']['package'] do
-  version node['mongodb']['version']
-  action :install
+node['mongodb']['packages'].each do |pkg|
+  package pkg do
+    version node['mongodb']['version']
+    action :install
+  end
 end

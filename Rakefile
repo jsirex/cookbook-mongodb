@@ -7,7 +7,6 @@ cookbook_dir = File.expand_path File.dirname(__FILE__)
 ENV['BERKSHELF_PATH'] = cookbook_dir + '/.berkshelf'
 ENV['CI_REPORTS'] =  cookbook_dir + '/reports'
 
-SKELETON_GIT_REPO = 'https://github.com/jsirex/cookbook-skeleton.git'
 
 task default: 'quick'
 
@@ -17,7 +16,7 @@ begin
   require 'kitchen/rake_tasks'
   Kitchen::RakeTasks.new
 rescue LoadError
-  puts '>>>>> Kitchen gem not loaded, omitting tasks' unless ENV['CI']
+  puts '>>>>> Kitchen gem not loaded, how do you test?' unless ENV['CI']
 rescue Kitchen::UserError => e
   puts "Warn: #{e}"
 end
@@ -58,28 +57,4 @@ end
 desc 'Run CI tests'
 task :ci do
   Rake::Task['complete'].invoke
-end
-
-desc 'Ensure skeleton files are up to date'
-task :skeleton do
-  begin
-    require 'git'
-    g = Git.open('.')
-
-    remotes = g.remotes.map { |r| r.name }
-    rname = 'skeleton'
-    unless remotes.include?(rname)
-      puts 'Adding skeleton remote to your repository'
-      g.add_remote(rname, SKELETON_GIT_REPO)
-    end
-
-    # fetch & merge remote
-    puts 'fetching latest bones'
-    g.remote(rname).fetch
-    puts 'merging remote branch'
-    sh "git merge -X theirs -m 'skeleton cookbook sync' --squash #{rname}/master"
-  rescue => e
-    warn 'The skeletons in your closet are unhappy'
-    puts e.message
-  end
 end
