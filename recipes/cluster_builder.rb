@@ -2,8 +2,9 @@ node.override['build_essential']['compiletime'] = true
 include_recipe 'build-essential'
 include_recipe 'mongodb::_search'
 
-chef_gem 'bson_ext'
-chef_gem 'mongo'
+chef_gem 'mongo' do
+  version '1.11.1'
+end
 
 cluster_name = node['mongodb']['cluster_name']
 
